@@ -15,7 +15,6 @@ import (
 
 	"github.com/gobuffalo/makr"
 	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
 
 	"github.com/gobuffalo/fizz"
 	"github.com/gobuffalo/pop"
@@ -143,21 +142,22 @@ func (m model) generateModelFile() error {
 	return m.Generate()
 }
 
-func (m model) generateFizz(cflag *pflag.Flag) error {
-	migrationPath := defaults.String(cflag.Value.String(), "./migrations")
+func (m model) generateFizz(path string) error {
+	migrationPath := defaults.String(path, "./migrations")
 	return pop.MigrationCreate(migrationPath, fmt.Sprintf("create_%s", m.Name.Table()), "fizz", []byte(m.Fizz()), []byte(m.UnFizz()))
 }
 
-func (m model) generateSQL(pathFlag, envFlag *pflag.Flag) error {
-	migrationPath := defaults.String(pathFlag.Value.String(), "./migrations")
-
-	env := envFlag.Value.String()
+func (m model) generateSQL(path, env string) error {
+	migrationPath := defaults.String(path, "./migrations")
 	db, err := pop.Connect(env)
 	if err != nil {
 		return err
 	}
 
-	return pop.MigrationCreate(migrationPath, fmt.Sprintf("create_%s.%s", m.Name.Table(), db.Dialect.Name()), "sql", []byte(m.GenerateSQLFromFizz(m.Fizz(), db)), []byte(m.GenerateSQLFromFizz(m.UnFizz(), db)))
+	d := db.Dialect
+	f := d.FizzTranslator()
+
+	return pop.MigrationCreate(migrationPath, fmt.Sprintf("create_%s.%s", m.Name.Table(), d.Name()), "sql", []byte(m.GenerateSQLFromFizz(m.Fizz(), f)), []byte(m.GenerateSQLFromFizz(m.UnFizz(), f)))
 }
 
 // Fizz generates the create table instructions
@@ -186,8 +186,8 @@ func (m model) UnFizz() string {
 }
 
 // GenerateSQLFromFizz generates SQL instructions from fizz instructions
-func (m model) GenerateSQLFromFizz(content string, c *pop.Connection) string {
-	content, err := fizz.AString(content, c.Dialect.FizzTranslator())
+func (m model) GenerateSQLFromFizz(content string, f fizz.Translator) string {
+	content, err := fizz.AString(content, f)
 	if err != nil {
 		return ""
 	}
@@ -231,7 +231,7 @@ func fizzColType(s string) string {
 	case "blob", "[]byte":
 		return "blob"
 	default:
-		if nrx.MatchString(s) {
+		if strings.HasPrefix(s, "nulls.") {
 			return fizzColType(strings.Replace(s, "nulls.", "", -1))
 		}
 		return strings.ToLower(s)

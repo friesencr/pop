@@ -1,9 +1,8 @@
-package pop_test
+package pop
 
 import (
 	"testing"
 
-	"github.com/gobuffalo/pop"
 	"github.com/gobuffalo/pop/nulls"
 	"github.com/gobuffalo/uuid"
 	"github.com/stretchr/testify/require"
@@ -12,7 +11,7 @@ import (
 func Test_ValidateAndSave(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := &ValidatableCar{Name: "VW"}
 		verrs, err := tx.ValidateAndSave(car)
 		r.NoError(err)
@@ -43,7 +42,7 @@ func Test_ValidateAndSave(t *testing.T) {
 func Test_ValidateAndSave_With_Slice(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := []ValidatableCar{
 			{Name: "VW"},
 			{Name: "AU"},
@@ -86,7 +85,7 @@ func Test_ValidateAndSave_With_Slice(t *testing.T) {
 func Test_ValidateAndCreate(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := &ValidatableCar{Name: "VW"}
 		verrs, err := tx.ValidateAndCreate(car)
 		r.NoError(err)
@@ -117,7 +116,7 @@ func Test_ValidateAndCreate(t *testing.T) {
 func Test_ValidateAndCreate_With_Slice(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := []ValidatableCar{
 			{Name: "VW"},
 			{Name: "AU"},
@@ -159,7 +158,7 @@ func Test_ValidateAndCreate_With_Slice(t *testing.T) {
 func Test_ValidateAndUpdate(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := &ValidatableCar{Name: "VW"}
 		verrs, err := tx.ValidateAndCreate(car)
 		r.NoError(err)
@@ -197,7 +196,7 @@ func Test_ValidateAndUpdate(t *testing.T) {
 func Test_ValidateAndUpdate_With_Slice(t *testing.T) {
 	r := require.New(t)
 	validationLogs = []string{}
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		car := []ValidatableCar{
 			{Name: "VW"},
 			{Name: "AU"},
@@ -241,7 +240,7 @@ func Test_ValidateAndUpdate_With_Slice(t *testing.T) {
 }
 
 func Test_Exec(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		user := User{Name: nulls.NewString("Mark 'Awesome' Bates")}
@@ -260,7 +259,7 @@ func Test_Exec(t *testing.T) {
 }
 
 func Test_ExecCount(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		user := User{Name: nulls.NewString("Mark 'Awesome' Bates")}
@@ -282,7 +281,7 @@ func Test_ExecCount(t *testing.T) {
 
 func Test_Save(t *testing.T) {
 	r := require.New(t)
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		u := &User{Name: nulls.NewString("Mark")}
 		r.Zero(u.ID)
 		tx.Save(u)
@@ -297,7 +296,7 @@ func Test_Save(t *testing.T) {
 
 func Test_Save_With_Slice(t *testing.T) {
 	r := require.New(t)
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		u := Users{
 			{Name: nulls.NewString("Mark")},
 			{Name: nulls.NewString("Larry")},
@@ -317,7 +316,7 @@ func Test_Save_With_Slice(t *testing.T) {
 }
 
 func Test_Create(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, _ := tx.Count(&User{})
@@ -338,7 +337,7 @@ func Test_Create(t *testing.T) {
 }
 
 func Test_Create_stringID(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, err := tx.Count(&Label{})
@@ -360,7 +359,7 @@ func Test_Create_stringID(t *testing.T) {
 }
 
 func Test_Create_With_Slice(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, _ := tx.Count(&User{})
@@ -378,7 +377,7 @@ func Test_Create_With_Slice(t *testing.T) {
 }
 
 func Test_Eager_Create_Has_Many(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 		count, _ := tx.Count(&User{})
 		user := User{
@@ -474,7 +473,7 @@ func Test_Eager_Create_Has_Many_With_Existing(t *testing.T) {
 }
 
 func Test_Eager_Create_Has_Many_Reset_Eager_Mode_Connection(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 		count, _ := tx.Count(&User{})
 		user1 := User{
@@ -500,7 +499,7 @@ func Test_Eager_Create_Has_Many_Reset_Eager_Mode_Connection(t *testing.T) {
 
 func Test_Eager_Validate_And_Create_Has_Many(t *testing.T) {
 	r := require.New(t)
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		user := User{
 			Name:         nulls.NewString("Mark 'Awesome' Bates"),
 			Books:        Books{{Title: "Pop Book", Isbn: "PB1"}},
@@ -520,7 +519,7 @@ func Test_Eager_Validate_And_Create_Has_Many(t *testing.T) {
 
 func Test_Eager_Validate_And_Create_Parental(t *testing.T) {
 	r := require.New(t)
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		user := User{
 			Name:         nulls.NewString(""),
 			Books:        Books{{Title: "Pop Book", Isbn: "PB1", Description: "Awesome Book!"}},
@@ -641,7 +640,7 @@ func Test_Eager_Validate_And_Create_Parental_With_Partial_Existing(t *testing.T)
 }
 
 func Test_Eager_Create_Belongs_To(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 		book := Book{
 			Title:       "Pop Book",
@@ -682,7 +681,7 @@ func Test_Eager_Create_Belongs_To(t *testing.T) {
 }
 
 func Test_Eager_Creation_Without_Associations(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 		code := CourseCode{
 			Course: Course{},
@@ -697,7 +696,7 @@ func Test_Eager_Creation_Without_Associations(t *testing.T) {
 }
 
 func Test_Create_UUID(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, _ := tx.Count(&Song{})
@@ -717,7 +716,7 @@ func Test_Create_UUID(t *testing.T) {
 }
 
 func Test_Create_Existing_UUID(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 		id, err := uuid.NewV4()
 		r.NoError(err)
@@ -740,7 +739,7 @@ func Test_Create_Existing_UUID(t *testing.T) {
 }
 
 func Test_Create_Timestamps(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		user := User{Name: nulls.NewString("Mark 'Awesome' Bates")}
@@ -760,7 +759,7 @@ func Test_Create_Timestamps(t *testing.T) {
 }
 
 func Test_Update(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		user := User{Name: nulls.NewString("Mark")}
@@ -779,7 +778,7 @@ func Test_Update(t *testing.T) {
 }
 
 func Test_Update_With_Slice(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		user := Users{
@@ -807,7 +806,7 @@ func Test_Update_With_Slice(t *testing.T) {
 }
 
 func Test_Update_UUID(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		song := Song{Title: "Automatic Buffalo"}
@@ -828,7 +827,7 @@ func Test_Update_UUID(t *testing.T) {
 }
 
 func Test_Destroy(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, err := tx.Count("users")
@@ -851,7 +850,7 @@ func Test_Destroy(t *testing.T) {
 }
 
 func Test_Destroy_With_Slice(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, err := tx.Count("users")
@@ -878,7 +877,7 @@ func Test_Destroy_With_Slice(t *testing.T) {
 }
 
 func Test_Destroy_UUID(t *testing.T) {
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		count, err := tx.Count("songs")
@@ -902,7 +901,7 @@ func Test_Destroy_UUID(t *testing.T) {
 
 func Test_TruncateAll(t *testing.T) {
 	count := int(0)
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		var err error
@@ -918,7 +917,7 @@ func Test_TruncateAll(t *testing.T) {
 		r.Equal(count+1, ctx)
 	})
 
-	transaction(func(tx *pop.Connection) {
+	transaction(func(tx *Connection) {
 		r := require.New(t)
 
 		err := tx.TruncateAll()

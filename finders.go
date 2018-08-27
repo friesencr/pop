@@ -30,15 +30,29 @@ func (c *Connection) Find(model interface{}, id interface{}) error {
 //	q.Find(&User{}, 1)
 func (q *Query) Find(model interface{}, id interface{}) error {
 	m := &Model{Value: model}
-	idq := fmt.Sprintf("%s.id = ?", m.TableName())
+	tn := m.TableName()
+	for _, c := range q.fromClauses {
+		if c.From == tn {
+			tn = c.As
+			break
+		}
+	}
+	idq := fmt.Sprintf("%s.id = ?", tn)
 	switch t := id.(type) {
 	case uuid.UUID:
 		return q.Where(idq, t.String()).First(model)
 	case string:
-		var err error
-		id, err = strconv.Atoi(t)
-		if err != nil {
-			return q.Where(idq, t).First(model)
+		l := len(t)
+		if l > 0 {
+			// Handle leading '0':
+			// if the string have a leading '0' and is not "0", prevent parsing to int
+			if t[0] != '0' || l == 1 {
+				var err error
+				id, err = strconv.Atoi(t)
+				if err != nil {
+					return q.Where(idq, t).First(model)
+				}
+			}
 		}
 	}
 
